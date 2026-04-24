@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "generatedBy": "you",
+  "tracks": [
+    {
+      "id": "track-001",
+      "title": "Neon Nights (Demo)",
+      "artist": "Stream Safe Collection",
+      "durationHintSec": 138,
+      "tags": ["synthwave", "lofi", "stream-safe"],
+      "license": "REPLACE_WITH_REAL_LICENSE",
+      "sourceUrl": "REPLACE_WITH_SOURCE_URL",
+      "file": "music/neon-nights-demo.mp3",
+      "coverText": "NN"
+    },
+    {
+      "id": "track-002",
+      "title": "Calm Study (Demo)",
+      "artist": "Stream Safe Collection",
+      "durationHintSec": 204,
+      "tags": ["ambient", "study", "stream-safe"],
+      "license": "REPLACE_WITH_REAL_LICENSE",
+      "sourceUrl": "REPLACE_WITH_SOURCE_URL",
+      "file": "music/calm-study-demo.mp3",
+      "coverText": "CS"
+    }
+  ]
+}
