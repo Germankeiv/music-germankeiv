@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Stream-safe Music</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">♪</div>
+        <div>
+          <div class="brandTitle">Stream-safe</div>
+          <div class="brandSub">No ads, GitHub Pages</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="navBtn active" data-view="library">Library</button>
+        <button class="navBtn" data-view="queue">Queue</button>
+        <button class="navBtn" data-view="about">About</button>
+      </nav>
+
+      <div class="tips">
+        <div class="tipTitle">Autoplay note</div>
+        <div class="tipText">
+          Most browsers block autoplay with sound. Tap Play once to start.
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="searchWrap">
+          <input id="searchInput" type="search" placeholder="Search songs, artists, tags..." autocomplete="off" />
+          <span class="searchHint">Press “/” to search</span>
+        </div>
+        <div class="topActions">
+          <button id="shuffleAllBtn" class="ghost">Shuffle all</button>
+          <button id="playAllBtn" class="primary">Play all</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div id="view-library" class="view active">
+          <h1>Library</h1>
+          <div id="libraryMeta" class="meta"></div>
+          <div id="tracksGrid" class="grid"></div>
+        </div>
+
+        <div id="view-queue" class="view">
+          <h1>Queue</h1>
+          <div class="meta">Your upcoming tracks.</div>
+          <div id="queueList" class="list"></div>
+          <div class="row">
+            <button id="clearQueueBtn" class="ghost">Clear queue</button>
+            <button id="saveQueueBtn" class="ghost">Export queue (JSON)</button>
+          </div>
+        </div>
+
+        <div id="view-about" class="view">
+          <h1>About</h1>
+          <p>
+            This is a static music player you can host on GitHub Pages.
+            Add only music you have the rights to share.
+          </p>
+          <ul>
+            <li>Keyboard: Space = play/pause, N = next, P = previous, / = focus search</li>
+            <li>Mobile: use the player controls at bottom</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer class="playerBar">
+        <div class="nowPlaying">
+          <div class="cover" id="coverBox">♫</div>
+          <div class="npText">
+            <div id="npTitle" class="npTitle">Nothing playing</div>
+            <div id="npSub" class="npSub">Tap Play</div>
+          </div>
+        </div>
+
+        <div class="transport">
+          <div class="btnRow">
+            <button id="prevBtn" class="iconBtn" title="Previous">⏮</button>
+            <button id="playBtn" class="iconBtn play" title="Play/Pause">▶</button>
+            <button id="nextBtn" class="iconBtn" title="Next">⏭</button>
+            <button id="loopBtn" class="iconBtn" title="Loop">🔁</button>
+            <button id="shuffleBtn" class="iconBtn" title="Shuffle">🔀</button>
+          </div>
+
+          <div class="seekRow">
+            <span id="timeNow" class="time">0:00</span>
+            <input id="seek" type="range" min="0" max="1000" value="0" />
+            <span id="timeTotal" class="time">0:00</span>
+          </div>
+        </div>
+
+        <div class="rightControls">
+          <button id="muteBtn" class="ghost small">Mute</button>
+          <input id="volume" type="range" min="0" max="1" step="0.01" value="1" />
+        </div>
+
+        <audio id="audio" preload="metadata" playsinline></audio>
+      </footer>
+    </main>
+  </div>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
+
+
+assets/styles.css
+:root{
+  --bg:#0b0f1a;
+  --panel:#111a2e;
+  --panel2:#0f1628;
+  --text:#e8eefc;
+  --muted:#a7b3d6;
+  --border:rgba(255,255,255,.12);
+  --blue:#4c7dff;
+  --blue2:#2a4bd6;
+  --danger:#ff4c6a;
+  --radius:16px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 800px at 30% 20%, rgba(76,125,255,.15), transparent 60%),
+              radial-gradient(900px 700px at 80% 80%, rgba(255,76,106,.10), transparent 55%),
+              var(--bg);
+  color:var(--text);
+}
+
+.app{
+  display:grid;
+  grid-template-columns: 270px 1fr;
+  min-height:100vh;
+}
+
+.sidebar{
+  background: rgba(17,26,46,.55);
+  border-right:1px solid var(--border);
+  padding:18px;
+  backdrop-filter: blur(10px);
+}
+
+.brand{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-bottom:18px;
+}
+.logo{
+  width:44px; height:44px;
+  border-radius: 12px;
+  display:grid; place-items:center;
+  background: rgba(76,125,255,.18);
+  border:1px solid var(--border);
+  font-size:20px;
+}
+.brandTitle{ font-weight:800; letter-spacing:.3px; }
+.brandSub{ font-size:12px; color:var(--muted); margin-top:2px; }
+
+.nav{ display:flex; flex-direction:column; gap:10px; margin: 10px 0 18px; }
+.navBtn{
+  background: transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  text-align:left;
+}
+.navBtn.active{
+  background: rgba(76,125,255,.20);
+  border-color: rgba(76,125,255,.45);
+}
+
+.tips{
+  margin-top: auto;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background: rgba(15,22,40,.45);
+}
+.tipTitle{ font-weight:700; margin-bottom:6px; }
+.tipText{ font-size:12px; color:var(--muted); line-height:1.4; }
+
+.main{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+
+.topbar{
+  padding:16px 18px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  background: rgba(15,22,40,.35);
+  backdrop-filter: blur(10px);
+}
+
+.searchWrap{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width: min(720px, 100%);
+}
+.searchWrap input{
+  width:100%;
+  padding:12px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.25);
+  color:var(--text);
+  outline:none;
+}
+.searchHint{ font-size:12px; color:var(--muted); }
+
+.topActions{ display:flex; gap:10px; flex-shrink:0; }
+
+button.primary{
+  background: linear-gradient(180deg, var(--blue), var(--blue2));
+  border: 0;
+  color: #071022;
+  font-weight:800;
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+}
+button.ghost{
+  background: transparent;
+  border:1px solid var(--border);
+  color: var(--text);
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+}
+button.ghost.small{ padding:8px 10px; }
+
+.content{
+  padding: 18px;
+  padding-bottom: 110px;
+  min-height:0;
+}
+
+.view{ display:none; }
+.view.active{ display:block; }
+
+.meta{
+  color: var(--muted);
+  margin: 8px 0 14px;
+  font-size: 13px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap:12px;
+}
+
+.card{
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(17,26,46,.38);
+  padding:12px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.badge{
+  font-size:12px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  color: var(--muted);
+}
+
+.cardCover{
+  width:46px; height:46px;
+  border-radius:12px;
+  display:grid; place-items:center;
+  background: rgba(255,255,255,.06);
+  border:1px solid var(--border);
+  flex-shrink:0;
+}
+
+.cardText{ min-width:0; flex:1; }
+.cardTitle{
+  font-weight:800;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.cardSub{
+  color: var(--muted);
+  font-size: 12px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  margin-top:2px;
+}
+.cardActions{
+  display:flex; flex-direction:column; gap:8px;
+}
+.cardActions button{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  cursor:pointer;
+}
+
+.list{
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  overflow:hidden;
+  background: rgba(17,26,46,.30);
+}
+.listItem{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px;
+  border-bottom:1px solid var(--border);
+}
+.listItem:last-child{ border-bottom:0; }
+.listItem .left{ min-width:0; }
+.listItem .title{ font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.listItem .sub{ font-size:12px; color:var(--muted); margin-top:2px; }
+.listItem .right{ display:flex; gap:8px; align-items:center; }
+.listItem button{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  cursor:pointer;
+}
+
+.row{ display:flex; gap:10px; margin-top:12px; }
+
+.playerBar{
+  position:fixed;
+  left:270px;
+  right:0;
+  bottom:0;
+  height:92px;
+  display:grid;
+  grid-template-columns: 320px 1fr 240px;
+  gap:14px;
+  align-items:center;
+  padding:12px 16px;
+  border-top:1px solid var(--border);
+  background: rgba(15,22,40,.65);
+  backdrop-filter: blur(12px);
+}
+
+.nowPlaying{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  min-width:0;
+}
+.cover{
+  width:54px; height:54px;
+  border-radius:14px;
+  background: rgba(255,255,255,.06);
+  border:1px solid var(--border);
+  display:grid; place-items:center;
+  font-size:20px;
+}
+.npText{ min-width:0; }
+.npTitle{ font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.npSub{ font-size:12px; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.transport{ min-width:0; }
+.btnRow{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+.iconBtn{
+  width:42px; height:42px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.16);
+  color: var(--text);
+  cursor:pointer;
+  display:grid; place-items:center;
+  user-select:none;
+}
+.iconBtn.play{ width:48px; height:48px; border-radius:16px; background: rgba(76,125,255,.22); border-color: rgba(76,125,255,.55); }
+
+.seekRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.time{ width:46px; text-align:center; font-size:12px; color:var(--muted); }
+#seek{ width:100%; }
+
+.rightControls{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+}
+#volume{ width:120px; }
+
+@media (max-width: 980px){
+  .app{ grid-template-columns: 1fr; }
+  .sidebar{ display:none; }
+  .playerBar{ left:0; grid-template-columns: 1fr; height:auto; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .nowPlaying{ justify-content:center; }
+  .rightControls{ justify-content:center; }
+}
